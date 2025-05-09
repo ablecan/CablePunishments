@@ -16,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 @Permission("cpunishments.mute")
 public final class MuteCommand {
 
-
     @Usage
     public void onDefaultExecution(BukkitSource source) {
         Player player = source.asPlayer();
