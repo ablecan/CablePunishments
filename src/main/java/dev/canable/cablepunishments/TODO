@@ -1,2 +1,4 @@
- - integrate with mongodb.
- - add ip checks for punishments.
+when a player joins
+we check if he has bans or mutes, first from cache. then from mongodb
+if he doesn't we check his ip, if it's connected to any ip punishment, then add him to the ip punishments map,
+and disallow him from joining/chatting.

@@ -1,8 +1,11 @@
 package dev.canable.cablepunishments;
 
 import dev.canable.cablepunishments.commands.BanCommand;
+import dev.canable.cablepunishments.commands.IPBanCommand;
+import dev.canable.cablepunishments.commands.IPMuteCommand;
 import dev.canable.cablepunishments.commands.MuteCommand;
 import dev.canable.cablepunishments.listeners.ChatEventListener;
+import dev.canable.cablepunishments.listeners.JoinEventListener;
 import dev.canable.cablepunishments.managers.PunishmentsManager;
 import dev.canable.cablepunishments.storage.MongoDB;
 import dev.canable.cablepunishments.tasks.PunishmentsTask;
@@ -24,9 +27,9 @@ public final class CablePunishmentsPlugin extends JavaPlugin {
     public void onEnable() {
         init();
         // Registering imperat framework commands.
-        imperat.registerCommands(new BanCommand(), new MuteCommand());
+        imperat.registerCommands(new BanCommand(), new IPBanCommand(), new MuteCommand(), new IPMuteCommand());
         // Registering local plugin event listeners.
-        registerListeners(new ChatEventListener());
+        registerListeners(new ChatEventListener(), new JoinEventListener());
         // Starting the recurring punishments task.
         new PunishmentsTask().runTaskTimerAsynchronously(this, 20L, 20 * 3L);
         // Initiating MongoDB

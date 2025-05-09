@@ -15,8 +15,8 @@ public class Punishment {
     private long issuedAt, duration;
     private boolean ip;
 
-    public Punishment(UUID issuer, UUID target, PunishmentType punishmentType,
-                      @Nullable String reason, @Nullable String ipAdress, long issuedAt, long duration, boolean ip) {
+    public Punishment(UUID issuer, UUID target, PunishmentType punishmentType, String reason,
+                      String ipAdress, long issuedAt, long duration, boolean ip) {
         this.issuer = issuer;
         this.target = target;
         this.punishmentType = punishmentType;
@@ -27,6 +27,9 @@ public class Punishment {
         this.ip = ip;
     }
 
+    public long remainingDuration() {
+        return (this.issuedAt + this.duration) - System.currentTimeMillis();
+    }
 
     public enum PunishmentType {MUTE, BAN}
 }

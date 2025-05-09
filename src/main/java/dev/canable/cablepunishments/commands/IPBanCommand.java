@@ -11,16 +11,15 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
-
-@Command(value = {"ban", "b"})
-@Permission("cpunishments.ban")
-public final class BanCommand {
+@Command(value = {"ipban", "ipb"})
+@Permission("cpunishments.ipban")
+public final class IPBanCommand {
 
 
     @Usage
     public void onDefaultExecution(BukkitSource source) {
         Player player = source.asPlayer();
-        TextHelper.sendPrefixedMessage(player, "&eUsage: /ban (target) [-silent/-s] [duration] [reason]");
+        TextHelper.sendPrefixedMessage(player, "&eUsage: /ipban (target) [-silent/-s] [duration] [reason]");
     }
 
     @Usage
@@ -36,7 +35,9 @@ public final class BanCommand {
         String durationMessage = duration == null ? "lifetime" : duration;
 
         Punishment punishment = new Punishment(source.asPlayer().getUniqueId(), target.getUniqueId(),
-                Punishment.PunishmentType.BAN, finalReason, "", System.currentTimeMillis(), banDuration, false);
+                Punishment.PunishmentType.BAN, finalReason,
+                source.asPlayer().getAddress().getAddress().getHostAddress().trim(),
+                System.currentTimeMillis(), banDuration, true);
 
         // Kicking the player if he's online.
         if(target.isOnline()) target.getPlayer().kickPlayer(TextHelper.format(
@@ -50,13 +51,14 @@ public final class BanCommand {
         CablePunishmentsPlugin.getInstance().getPunishmentsManager().addPunishment(punishment);
 
         // Broadcasting the punishment to online staff.
-        TextHelper.broadcastPermissionPrefixedMessage("cpunishments.ban",
-                "&c" + source.asPlayer().getName() + " &7has &aBanned "+target.getName()+"&8(&e" + durationMessage + "&8) &7for &a"+finalReason);
-
+        TextHelper.broadcastPermissionPrefixedMessage("cpunishments.ipban",
+                "&c" + source.asPlayer().getName() +
+                        " &7has &aBanned "+target.getName()+"&8(&e" + durationMessage + "&8) &7for &a"+finalReason
+        );
         // Broadcasting the punishment to all players if it's not silent.
         if (!silent)
-            TextHelper.broadcastPrefixedMessage(
-                    "&6" + target.getName() + " &7has been &cBanned &7for &6" + durationMessage + " &7due to &c"+finalReason
+            TextHelper.broadcastPrefixedMessage("&6" + target.getName() +
+                    " &7has been &cBanned &7for &6" + durationMessage + " &7due to &c"+finalReason
             );
     }
 }

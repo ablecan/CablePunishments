@@ -38,7 +38,7 @@ shadowJar {
     relocate 'dev.mqzen.time', 'dev.canable.cablepunishments.time'
     setArchiveFileName("CablePunishments-" + project.version + ".jar")
     destinationDirectory.set(file(
-            "C:\\Users\\Admin\\Desktop\\canable\\projects\\CablePunishments"))
+            "C:\\Users\\Admin\\Desktop\\canable\\PaveMC\\cablepunishments"))
 }
 
 def targetJavaVersion = 17

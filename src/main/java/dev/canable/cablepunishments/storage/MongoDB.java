@@ -24,21 +24,18 @@ public class MongoDB {
     public void close() {
         mongoClient.close();
     }
-
+    // ip, issuer, type, reason, issued add, duration
     // Add a new punishment
     public void addPunishment(Punishment punishment) {
         Document doc = new Document("_id", UUID.randomUUID().toString())
-                .append("target", punishment.getTarget().toString())
                 .append("issuer", punishment.getIssuer().toString())
                 .append("punishment_type", punishment.getPunishmentType().name().toLowerCase())
                 .append("reason", punishment.getReason())
-                .append("ip_address", punishment.getIpAdress())
                 .append("issuedAt", punishment.getIssuedAt())
                 .append("duration", punishment.getDuration())
-                .append("ip", punishment.isIp())
                 .append("active", true);
-
-        punishments.insertOne(doc);
+        if(punishment.isIp()) punishments.insertOne(doc.append("ip", true).append("ip_address", punishment.getIpAdress()));
+        else punishments.insertOne(doc.append("ip", false).append("target", punishment.getTarget().toString()));
     }
 
     // Query the database for an active punishment
@@ -56,6 +53,23 @@ public class MongoDB {
             boolean ip = doc.getBoolean("ip");
 
             return new Punishment(issuer, target, punishmentType, reason, ipAdress, issuedAt, duration, ip);
+        }
+        return null;
+    }
+
+    public Punishment getActiveIPPunishment(String ipAddress, Punishment.PunishmentType punishmentType) {
+        Document doc = punishments.find(new Document("ip_address", ipAddress)
+                .append("punishment_type", punishmentType.toString().toLowerCase())
+                .append("active", true)).first();
+
+        if (doc != null) {
+            UUID issuer = UUID.fromString(doc.getString("issuer"));
+            String reason = doc.getString("reason");
+            long issuedAt = doc.getLong("issuedAt");
+            long duration = doc.getLong("duration");
+            boolean ip = doc.getBoolean("ip");
+
+            return new Punishment(issuer, null, punishmentType, reason, ipAddress, issuedAt, duration, ip);
         }
         return null;
     }
