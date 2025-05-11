@@ -11,11 +11,9 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
-
 @Command(value = {"ban", "b"})
-@Permission("cpunishments.ban")
+@Permission("cablepunishments.ban")
 public final class BanCommand {
-
 
     @Usage
     public void onDefaultExecution(BukkitSource source) {
@@ -28,12 +26,14 @@ public final class BanCommand {
                     @Switch({"silent", "s"}) boolean silent,
                     @Optional @Nullable String duration,
                     @Optional @Greedy String reason) {
-        // Check if the duration is not set; a lifetime punishment.
-        long banDuration = -1;
-        if (duration != null) banDuration = TimeFormatter.parseDuration(duration);
+        long banDuration = TimeFormatter.parseDuration(duration);
+        if (banDuration == -2) {
+            TextHelper.sendPrefixedMessage(source.asPlayer(), "&cInvalid duration format. Use -1 for permanent or a valid time format (e.g., 1d, 2h, 30m).");
+            return;
+        }
 
         String finalReason = reason == null ? "Breaking the rules" : reason;
-        String durationMessage = duration == null ? "lifetime" : duration;
+        String durationMessage = banDuration == -1 ? "permanent" : duration;
 
         Punishment punishment = new Punishment(source.asPlayer().getUniqueId(), target.getUniqueId(),
                 Punishment.PunishmentType.BAN, finalReason, "", System.currentTimeMillis(), banDuration, false);
@@ -50,7 +50,7 @@ public final class BanCommand {
         CablePunishmentsPlugin.getInstance().getPunishmentsManager().addPunishment(punishment);
 
         // Broadcasting the punishment to online staff.
-        TextHelper.broadcastPermissionPrefixedMessage("cpunishments.ban",
+        TextHelper.broadcastPermissionPrefixedMessage("cablepunishments.ban",
                 "&c" + source.asPlayer().getName() + " &7has &aBanned "+target.getName()+"&8(&e" + durationMessage + "&8) &7for &a"+finalReason);
 
         // Broadcasting the punishment to all players if it's not silent.

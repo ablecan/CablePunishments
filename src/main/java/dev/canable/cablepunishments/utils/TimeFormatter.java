@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 public final class TimeFormatter {
     public static String formatDuration(long millis) {
+        if (millis == -1) return "permanent";
         if (millis < 1000) return "0s";
 
         LinkedHashMap<String, Long> timeUnits = getStringLongLinkedHashMap(millis);
@@ -52,7 +53,7 @@ public final class TimeFormatter {
     }
 
     public static long parseDuration(String duration) {
-        if (duration == null || duration.isBlank()) return 0;
+        if (duration == null || duration.isBlank()) return -1;
 
         long totalMillis = 0L;
         Pattern pattern = Pattern.compile("(\\d+)([a-zA-Z]+)");
@@ -79,9 +80,9 @@ public final class TimeFormatter {
             }
 
             // If the string didn't match anything meaningful
-            return matches == 0 ? -1 : totalMillis;
+            return matches == 0 ? -2 : totalMillis;
         } catch (Exception e) {
-            return -1;
+            return -2;
         }
     }
 }

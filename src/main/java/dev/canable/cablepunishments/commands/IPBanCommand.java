@@ -7,14 +7,12 @@ import dev.canable.cablepunishments.utils.TimeFormatter;
 import dev.velix.imperat.BukkitSource;
 import dev.velix.imperat.annotations.*;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 @Command(value = {"ipban", "ipb"})
-@Permission("cpunishments.ipban")
+@Permission("cablepunishments.ipban")
 public final class IPBanCommand {
-
 
     @Usage
     public void onDefaultExecution(BukkitSource source) {
@@ -23,20 +21,27 @@ public final class IPBanCommand {
     }
 
     @Usage
-    public void ban(BukkitSource source, OfflinePlayer target,
+    public void ban(BukkitSource source, Player target,
                     @Switch({"silent", "s"}) boolean silent,
                     @Optional @Nullable String duration,
                     @Optional @Greedy String reason) {
-        // Check if the duration is not set; a lifetime punishment.
-        long banDuration = -1;
-        if (duration != null) banDuration = TimeFormatter.parseDuration(duration);
+        if(!target.isOnline()){
+            TextHelper.sendPrefixedMessage(source.asPlayer(), "&cTarget player must be online!");
+            return;
+        }
+
+        long banDuration = TimeFormatter.parseDuration(duration);
+        if (banDuration == -2) {
+            TextHelper.sendPrefixedMessage(source.asPlayer(), "&cInvalid duration format. Use -1 for permanent or a valid time format (e.g., 1d, 2h, 30m).");
+            return;
+        }
 
         String finalReason = reason == null ? "Breaking the rules" : reason;
-        String durationMessage = duration == null ? "lifetime" : duration;
+        String durationMessage = banDuration == -1 ? "permanent" : duration;
 
         Punishment punishment = new Punishment(source.asPlayer().getUniqueId(), target.getUniqueId(),
                 Punishment.PunishmentType.BAN, finalReason,
-                source.asPlayer().getAddress().getAddress().getHostAddress().trim(),
+                target.getAddress().getAddress().getHostAddress().trim(),
                 System.currentTimeMillis(), banDuration, true);
 
         // Kicking the player if he's online.
@@ -51,7 +56,7 @@ public final class IPBanCommand {
         CablePunishmentsPlugin.getInstance().getPunishmentsManager().addPunishment(punishment);
 
         // Broadcasting the punishment to online staff.
-        TextHelper.broadcastPermissionPrefixedMessage("cpunishments.ipban",
+        TextHelper.broadcastPermissionPrefixedMessage("cablepunishments.ipban",
                 "&c" + source.asPlayer().getName() +
                         " &7has &aBanned "+target.getName()+"&8(&e" + durationMessage + "&8) &7for &a"+finalReason
         );

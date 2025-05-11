@@ -33,7 +33,7 @@ public final class CablePunishmentsPlugin extends JavaPlugin {
         // Starting the recurring punishments task.
         new PunishmentsTask().runTaskTimerAsynchronously(this, 20L, 20 * 3L);
         // Initiating MongoDB
-        mongoDB = new MongoDB("minecraft");
+        mongoDB = new MongoDB(getDataFolder());
     }
 
     @Override

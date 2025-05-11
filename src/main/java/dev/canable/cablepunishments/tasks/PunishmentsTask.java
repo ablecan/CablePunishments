@@ -8,32 +8,54 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.Map;
 import java.util.UUID;
 
-public final class PunishmentsTask extends BukkitRunnable {
-
-    private PunishmentsManager punishmentsManager = CablePunishmentsPlugin.getInstance().getPunishmentsManager();
+public class PunishmentsTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        for (Map.Entry<UUID, Punishment> entry : punishmentsManager.getBansMap().entrySet()) {
-            UUID uuid = entry.getKey();
-            Punishment ban = entry.getValue();
+        PunishmentsManager punishmentsManager = CablePunishmentsPlugin.getInstance().getPunishmentsManager();
 
-            if (System.currentTimeMillis() - ban.getIssuedAt() >= ban.getDuration())
-                punishmentsManager.removePunishment(uuid, ban);
+        // Check normal punishments
+        for (UUID uuid : punishmentsManager.getBansMap().keySet()) {
+            Punishment punishment = punishmentsManager.getBan(uuid);
+            if (!punishment.isActive()) {
+                punishmentsManager.removePunishment(uuid, punishment);
+                CablePunishmentsPlugin.getInstance().getMongoDB().updatePunishmentStatus(uuid, false);
+            }
         }
-        for (Map.Entry<UUID, Punishment> entry : punishmentsManager.getMutesMap().entrySet()) {
-            UUID uuid = entry.getKey();
-            Punishment mute = entry.getValue();
 
-            if (System.currentTimeMillis() - mute.getIssuedAt() >= mute.getDuration()) {
-                punishmentsManager.removePunishment(uuid, mute);
-
+        for (UUID uuid : punishmentsManager.getMutesMap().keySet()) {
+            Punishment punishment = punishmentsManager.getMute(uuid);
+            if (!punishment.isActive()) {
+                punishmentsManager.removePunishment(uuid, punishment);
+                CablePunishmentsPlugin.getInstance().getMongoDB().updatePunishmentStatus(uuid, false);
                 Player player = Bukkit.getPlayer(uuid);
-                if (player.isOnline() && mute.getPunishmentType() == Punishment.PunishmentType.MUTE) {
-                    TextHelper.sendPrefixedMessage(player, "&aYou have been unmuted!");
+                if (player != null) {
+                    TextHelper.sendPrefixedMessage(player, "&aYour mute has expired.");
+                }
+            }
+        }
+
+        // Check IP punishments
+        for (String ip : punishmentsManager.getIpBansMap().keySet()) {
+            Punishment punishment = punishmentsManager.getIPBan(ip);
+            if (!punishment.isActive()) {
+                punishmentsManager.removeIPPunishment(ip, punishment);
+                CablePunishmentsPlugin.getInstance().getMongoDB().updateIPPunishmentStatus(ip,false);
+            }
+        }
+
+        for (String ip : punishmentsManager.getIpMutesMap().keySet()) {
+            Punishment punishment = punishmentsManager.getIPMute(ip);
+            if (!punishment.isActive()) {
+                punishmentsManager.removeIPPunishment(ip, punishment);
+                CablePunishmentsPlugin.getInstance().getMongoDB().updateIPPunishmentStatus(ip, false);
+                // Notify all online players with this IP
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (player.getAddress().getAddress().getHostAddress().equals(ip)) {
+                        TextHelper.sendPrefixedMessage(player, "&aYour IP mute has expired.");
+                    }
                 }
             }
         }

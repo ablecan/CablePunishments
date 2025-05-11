@@ -6,7 +6,6 @@ import dev.canable.cablepunishments.utils.TextHelper;
 import dev.canable.cablepunishments.utils.TimeFormatter;
 import dev.velix.imperat.BukkitSource;
 import dev.velix.imperat.annotations.*;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,19 +20,26 @@ public final class IPMuteCommand {
     }
 
     @Usage
-    public void mute(BukkitSource source, OfflinePlayer target,
+    public void mute(BukkitSource source, Player target,
                      @Switch({"silent", "s"}) boolean silent,
                      @Optional @Nullable String duration,
                      @Optional @Greedy String reason) {
-        // Check if the duration is not set; a lifetime punishment.
-        long muteDuration = -1;
-        if (duration != null) muteDuration = TimeFormatter.parseDuration(duration);
+        if(!target.isOnline()){
+            TextHelper.sendPrefixedMessage(source.asPlayer(), "&cTarget player must be online!");
+            return;
+        }
+
+        long muteDuration = TimeFormatter.parseDuration(duration);
+        if (muteDuration == -2) {
+            TextHelper.sendPrefixedMessage(source.asPlayer(), "&cInvalid duration format. Use -1 for permanent or a valid time format (e.g., 1d, 2h, 30m).");
+            return;
+        }
 
         String finalReason = reason == null ? "Breaking the rules" : reason;
-        String durationMessage = duration == null ? "lifetime" : duration;
+        String durationMessage = muteDuration == -1 ? "permanent" : duration;
 
         Punishment punishment = new Punishment(source.asPlayer().getUniqueId(), target.getUniqueId(),
-                Punishment.PunishmentType.MUTE, finalReason, source.asPlayer().getAddress().getAddress().getHostAddress(),
+                Punishment.PunishmentType.MUTE, finalReason, target.getAddress().getAddress().getHostAddress(),
                 System.currentTimeMillis(), muteDuration, true);
 
         // Inserting the punishment object into memory & mongodb to have a hybrid type of storage.

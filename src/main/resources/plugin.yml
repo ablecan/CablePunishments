@@ -1,4 +1,4 @@
-name: CPunishments
+name: CablePunishments
 version: '1.0-SNAPSHOT'
 main: dev.canable.cablepunishments.CablePunishmentsPlugin
 authors: [ canable ]
